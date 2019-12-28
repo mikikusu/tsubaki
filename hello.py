@@ -22,16 +22,30 @@ def index():
             -ms-border-radius: 4px;
             border-radius: 4px;
         }
-        label {
-            background: #b0c4de;
-            color: #191970;
-            cursor: pointer;
-            padding: 15px 30px;
-            margin: 0 10px 0 0;
-            display: inline-block;
+        span {
+            display: block;
+            color: #fff;
+            font-weight: bold;
+            font-size: 18px;
+            background: #f55742;
+            padding: 8px 0;
+            border-radius: 16px;
+            max-width: 240px;
+            text-align: center;
+            transition: .3s;
+            cursor:pointer;
         }
-        label input {
-            display: none;
+        span:hover {
+            background: #f59c90;
+        }
+        label input::before {
+            content: “添付ファイル：”;
+            position: absolute;
+            background: #fff;
+            width: 110px;
+            height: 26px;
+            line-height: 1.8;
+            text-align: right;
         }
         input[type="submit"] {
           -webkit-appearance: none;
@@ -43,12 +57,17 @@ def index():
           border-radius: 10px;
           box-shadow: 3px 3px 3px gray;
         }
-    </style></head>
+    </style>
+    <meta name="viewport" content="width=device-width">
+    </head>
     <body>
         <h2>りんご組さん動画アップロード</h2>
         <div><form method="POST" action="upfile" enctype="multipart/form-data">
         <p><input type="text" name="idName" placeholder="お子様のお名前（例：ともな）"><p>
-        <p><label for="sample1">ファイルを選択<input type="file" name="idFile" id="sample1"></label><p>
+        <label for=”id_img” >
+            <span>ファイルを選択</span>
+            <input type="file" id=”id_img” name="idFile">
+        </label>
         <p><input type="submit" value="送信する" class="btn-square-little-rich"><p>
         </form></div>
     </body></html>
@@ -64,22 +83,23 @@ def upload_file():
             return '名前を入力してください。<br><a href="/">戻る</a>'
         elif f.filename == "":
             return 'ファイルを選択してください。<br><a href="/">戻る</a>'
-        f.save(DATA_DIR + '/' + name + '_' + f.filename)
+        name = name.replace(os.sep, '／')
+        path = os.path.abspath(os.path.join(DATA_DIR, name + '_' + f.filename))
+        if not path.startswith(DATA_DIR):
+            return '名前やファイル名に利用できない文字が含まれています<br><a href="/">戻る</a>'
+        f.save(path)
         body = 'ファイルをアップロードしました。<br>別のファイルは<a href="/">こちら</a>から。<br>'
-        body += DATA_DIR + '/' + name + '_' + f.filename
         return body
     else:
         return "Fileをアップロードしてください"
 
 @app.route('/filelist', methods=["GET"])
 def file_list():
-    f_list = glob.glob(DATA_DIR + "/*")
+    f_list = os.listdir(DATA_DIR)
     body = '<html><body>'
     body += '<h2>りんご組さん動画一覧</h2>'
     body += '<ul>'
     for f_name in f_list:
-        if f_name == "./hello.py":
-            continue
         body += '<li><a href="/dl/' + f_name + '">' + f_name + '</a></li>'
     body += '</ul>'
     body += '</body><html>'
